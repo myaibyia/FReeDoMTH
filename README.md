@@ -1,6 +1,6 @@
 # 🚀 Services By FReeDoMTH
 
-**3.2 Service Unlock - Omnichannel Payment System**
+**Service Unlock - Omnichannel Payment System**
 
 ---
 
