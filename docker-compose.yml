@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: freedomth_postgres
+    environment:
+      POSTGRES_USER: freedomth
+      POSTGRES_PASSWORD: freedomth_dev_password
+      POSTGRES_DB: freedomth_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - freedomth_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U freedomth"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: freedomth_backend
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: freedomth
+      DB_PASSWORD: freedomth_dev_password
+      DB_NAME: freedomth_db
+      PORT: 8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - freedomth_network
+    volumes:
+      - ./backend:/app
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: freedomth_frontend
+    environment:
+      VUE_APP_API_URL: http://localhost:8080
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - freedomth_network
+    volumes:
+      - ./frontend:/app
+
+volumes:
+  postgres_data:
+
+networks:
+  freedomth_network:
+    driver: bridge
